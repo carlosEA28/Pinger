@@ -7,12 +7,22 @@ import (
 )
 
 type Config struct {
-	Server ServerConfig
+	Server   ServerConfig
+	Database DatabaseConfig
 }
 
 type ServerConfig struct {
 	Port    string
 	GinMode string
+}
+
+type DatabaseConfig struct {
+	Host     string
+	Port     string
+	User     string
+	Password string
+	Name     string
+	SSLMode  string
 }
 
 func Load() (*Config, error) {
@@ -22,6 +32,14 @@ func Load() (*Config, error) {
 		Server: ServerConfig{
 			Port:    getEnv("PORT", "8080"),
 			GinMode: getEnv("GIN_MODE", "debug"),
+		},
+		Database: DatabaseConfig{
+			Host:     getEnv("DB_HOST", "localhost"),
+			Port:     getEnv("DB_PORT", "5432"),
+			User:     getEnv("DB_USER", "postgres"),
+			Password: getEnv("DB_PASSWORD", ""),
+			Name:     getEnv("DB_NAME", "pinger"),
+			SSLMode:  getEnv("DB_SSL_MODE", "disable"),
 		},
 	}, nil
 }

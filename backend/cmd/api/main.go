@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"log"
 	"net/http"
 	"os"
 	"os/signal"
@@ -12,20 +11,33 @@ import (
 	"time"
 
 	"pinger/internal/config"
+	"pinger/internal/database"
+	"pinger/internal/logger"
 	"pinger/internal/server"
 )
 
 func main() {
-	// 1. Inicialize suas futuras dependências aqui (Logger, Config, DB, Services, etc)
+	log := logger.New()
+
 	cfg, err := config.Load()
 	if err != nil {
-		log.Fatalf("failed to load config: %v", err)
+		log.Fatal().Err(err).Msg("failed to load config")
 	}
-	
-	// db, _ := database.New()
-	
+
+	db, err := database.New(&cfg.Database)
+	if err != nil {
+		log.Fatal().Err(err).Msg("failed to connect to database")
+	}
+
+	mainDB, err := db.DB()
+	if err != nil {
+		log.Fatal().Err(err).Msg("failed to get database connection")
+	}
+
+	defer mainDB.Close()
+
 	// 2. Instancie o servidor
-	srv := server.New(cfg)
+	srv := server.New(cfg, db, &log)
 	router := srv.SetupRoutes()
 
 	port := cfg.Server.Port
@@ -37,28 +49,25 @@ func main() {
 		WriteTimeout: 10 * time.Second,
 	}
 
-	// 3. Inicie o servidor em uma goroutine
 	go func() {
-		log.Printf("starting http server on port %s\n", port)
+		log.Info().Str("port", port).Msg("starting http server")
 		if err := httpServer.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
-			log.Fatalf("failed to start http server: %v", err)
+			log.Fatal().Err(err).Msg("failed to start http server")
 		}
 	}()
 
-	// 4. Graceful Shutdown (Escuta de sinais do SO)
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
 	<-quit
 
-	log.Println("shutting down server...")
+	log.Info().Msg("shutting down server")
 	ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
 	defer cancel()
 
 	if err := httpServer.Shutdown(ctx); err != nil {
-		log.Fatalf("failed to shutdown http server: %v", err)
+		log.Fatal().Err(err).Msg("failed to shutdown http server")
 		return
 	}
 
-	// Aqui você faria o encerramento do DB: mainDB.Close()
-	log.Println("server exited gracefully")
+	log.Info().Msg("server exited gracefully")
 }

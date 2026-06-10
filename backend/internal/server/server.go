@@ -3,46 +3,39 @@ package server
 import (
 	"net/http"
 
-	"github.com/gin-gonic/gin"
 	"pinger/internal/config"
+
+	"github.com/gin-gonic/gin"
+	"github.com/rs/zerolog"
+	"gorm.io/gorm"
 )
 
-// Server holds the dependencies for our HTTP server
 type Server struct {
 	config *config.Config
-	// Aqui você pode adicionar as dependências futuras:
-	// db             *gorm.DB
-	// logger         *zerolog.Logger
-	// algunService   *services.AlgumService
+	db     *gorm.DB
+	logger *zerolog.Logger
 }
 
-// New creates a new Server instance
-func New(cfg *config.Config) *Server {
+func New(cfg *config.Config, db *gorm.DB, logger *zerolog.Logger) *Server {
 	return &Server{
 		config: cfg,
+		db:     db,
+		logger: logger,
 	}
 }
 
-// SetupRoutes configura o roteador Gin seguindo o padrão do projeto base
 func (s *Server) SetupRoutes() *gin.Engine {
 	router := gin.New()
 
-	// Middlewares globais
 	router.Use(gin.Logger())
 	router.Use(gin.Recovery())
 	router.Use(s.corsMiddleware())
 
-	// Rota de Health Check
 	router.GET("/health", s.healthCheck)
 
-	// Grupo de rotas API v1
 	api := router.Group("/api/v1")
 	{
-		// Exemplo de como estruturar os grupos no futuro:
-		// users := api.Group("/users")
-		// {
-		// 	users.GET("/profile", s.getProfile)
-		// }
+
 		_ = api
 	}
 
