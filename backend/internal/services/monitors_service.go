@@ -1,6 +1,7 @@
 package services
 
 import (
+	"context"
 	"errors"
 	"pinger/internal/dto"
 	"pinger/internal/interfaces"
@@ -43,4 +44,25 @@ func (s *MontiorsService) Create(req *dto.CreateMonitorDto) (*dto.CreateMonitorD
 		IntervalSeconds: monitor.IntervalSeconds,
 		IsActive:        monitor.IsActive,
 	}, nil
+}
+
+func (s *MontiorsService) FindAll(ctx context.Context) ([]dto.MonitorResponseDto, error) {
+	monitors, err := s.monitorsRepository.FindAll(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	response := make([]dto.MonitorResponseDto, 0, len(monitors))
+	for _, monitor := range monitors {
+		response = append(response, dto.MonitorResponseDto{
+			ID:              monitor.ID,
+			URL:             monitor.URL,
+			IntervalSeconds: monitor.IntervalSeconds,
+			IsActive:        monitor.IsActive,
+			CreatedAt:       monitor.CreatedAt,
+			UpdatedAt:       monitor.UpdatedAt,
+		})
+	}
+
+	return response, nil
 }
