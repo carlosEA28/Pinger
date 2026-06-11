@@ -43,14 +43,24 @@ func (r *GormMonitorsRepository) FindById(id uuid.UUID) (models.Monitor, error) 
 	return monitor, nil
 }
 
-func (r *GormMonitorsRepository) Update(id uuid.UUID, fields dto.CreateMonitorDto) error {
+func (r *GormMonitorsRepository) Update(id uuid.UUID, fields dto.UpdateMonitorDto) error {
+	updates := map[string]interface{}{}
+
+	if fields.URL != nil {
+		updates["url"] = *fields.URL
+	}
+
+	if intervalSeconds := fields.RequestedIntervalSeconds(); intervalSeconds != nil {
+		updates["interval_seconds"] = *intervalSeconds
+	}
+
+	if isActive := fields.RequestedIsActive(); isActive != nil {
+		updates["is_active"] = *isActive
+	}
+
 	return r.db.Model(&models.Monitor{}).
 		Where("id = ?", id).
-		Updates(map[string]interface{}{
-			"url":              fields.URL,
-			"interval_seconds": fields.IntervalSeconds,
-			"is_active":        fields.IsActive,
-		}).Error
+		Updates(updates).Error
 }
 
 func (r *GormMonitorsRepository) Delete(id uuid.UUID) error {
