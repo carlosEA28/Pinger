@@ -13,7 +13,9 @@ import (
 	"pinger/internal/config"
 	"pinger/internal/database"
 	"pinger/internal/logger"
+	"pinger/internal/repository"
 	"pinger/internal/server"
+	"pinger/internal/services"
 )
 
 func main() {
@@ -36,8 +38,11 @@ func main() {
 
 	defer mainDB.Close()
 
-	// 2. Instancie o servidor
-	srv := server.New(cfg, db, &log)
+	monitorRepository := repository.NewGormMonitorsRepository(db)
+
+	monitorsService := services.NewMonitorsService(monitorRepository)
+
+	srv := server.New(cfg, db, &log, monitorsService)
 	router := srv.SetupRoutes()
 
 	port := cfg.Server.Port

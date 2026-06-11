@@ -4,6 +4,7 @@ import (
 	"net/http"
 
 	"pinger/internal/config"
+	"pinger/internal/services"
 
 	"github.com/gin-gonic/gin"
 	"github.com/rs/zerolog"
@@ -11,16 +12,18 @@ import (
 )
 
 type Server struct {
-	config *config.Config
-	db     *gorm.DB
-	logger *zerolog.Logger
+	config         *config.Config
+	db             *gorm.DB
+	logger         *zerolog.Logger
+	MonitorService *services.MontiorsService
 }
 
-func New(cfg *config.Config, db *gorm.DB, logger *zerolog.Logger) *Server {
+func New(cfg *config.Config, db *gorm.DB, logger *zerolog.Logger, monitorService *services.MontiorsService) *Server {
 	return &Server{
-		config: cfg,
-		db:     db,
-		logger: logger,
+		config:         cfg,
+		db:             db,
+		logger:         logger,
+		MonitorService: monitorService,
 	}
 }
 
@@ -35,8 +38,10 @@ func (s *Server) SetupRoutes() *gin.Engine {
 
 	api := router.Group("/api/v1")
 	{
-
-		_ = api
+		monitors := api.Group("monitors")
+		{
+			monitors.POST("/create", s.create)
+		}
 	}
 
 	return router
