@@ -6,6 +6,8 @@ import (
 	"pinger/internal/dto"
 	"pinger/internal/interfaces"
 	"pinger/internal/models"
+
+	"github.com/google/uuid"
 )
 
 type MontiorsService struct {
@@ -54,15 +56,46 @@ func (s *MontiorsService) FindAll(ctx context.Context) ([]dto.MonitorResponseDto
 
 	response := make([]dto.MonitorResponseDto, 0, len(monitors))
 	for _, monitor := range monitors {
-		response = append(response, dto.MonitorResponseDto{
-			ID:              monitor.ID,
-			URL:             monitor.URL,
-			IntervalSeconds: monitor.IntervalSeconds,
-			IsActive:        monitor.IsActive,
-			CreatedAt:       monitor.CreatedAt,
-			UpdatedAt:       monitor.UpdatedAt,
-		})
+		response = append(response, monitorResponseDto(monitor))
 	}
 
 	return response, nil
+}
+
+func (s *MontiorsService) Update(id string, req *dto.UpdateMonitorDto) (*dto.MonitorResponseDto, error) {
+	monitorID, err := uuid.Parse(id)
+	if err != nil {
+		return nil, errors.New("Invalid monitor id")
+	}
+
+	if req.URL == nil && req.RequestedIntervalSeconds() == nil && req.RequestedIsActive() == nil {
+		return nil, errors.New("At least one field must be provided")
+	}
+
+	if req.URL != nil && *req.URL == "" {
+		return nil, errors.New("The url cannot be empty")
+	}
+
+	if err := s.monitorsRepository.Update(monitorID, *req); err != nil {
+		return nil, err
+	}
+
+	monitor, err := s.monitorsRepository.FindById(monitorID)
+	if err != nil {
+		return nil, err
+	}
+
+	response := monitorResponseDto(monitor)
+	return &response, nil
+}
+
+func monitorResponseDto(monitor models.Monitor) dto.MonitorResponseDto {
+	return dto.MonitorResponseDto{
+		ID:              monitor.ID,
+		URL:             monitor.URL,
+		IntervalSeconds: monitor.IntervalSeconds,
+		IsActive:        monitor.IsActive,
+		CreatedAt:       monitor.CreatedAt,
+		UpdatedAt:       monitor.UpdatedAt,
+	}
 }

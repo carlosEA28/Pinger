@@ -7,6 +7,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
+	"gorm.io/gorm"
 )
 
 func (s *Server) create(c *gin.Context) {
@@ -35,6 +36,27 @@ func (s *Server) findAll(c *gin.Context) {
 	utils.SuccessResponse(c, "Monitors listed successfully", monitors)
 }
 
+func (s *Server) update(c *gin.Context) {
+	var req dto.UpdateMonitorDto
+	if err := c.ShouldBindJSON(&req); err != nil {
+		utils.BadRequestResponse(c, "Invalid request data", formatUpdateMonitorValidationError(err))
+		return
+	}
+
+	monitor, err := s.MonitorService.Update(c.Param("id"), &req)
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			utils.NotFoundResponse(c, "Monitor not found")
+			return
+		}
+
+		utils.BadRequestResponse(c, "failed to update monitor", err)
+		return
+	}
+
+	utils.SuccessResponse(c, "Monitor updated successfully", monitor)
+}
+
 func formatCreateMonitorValidationError(err error) error {
 	var validationErrors validator.ValidationErrors
 	if !errors.As(err, &validationErrors) {
@@ -49,6 +71,24 @@ func formatCreateMonitorValidationError(err error) error {
 			}
 			return errors.New("The url must be valid")
 		case "IntervalSeconds":
+			return errors.New("The Interval should be at least 30 secondos long")
+		}
+	}
+
+	return errors.New("Invalid request data")
+}
+
+func formatUpdateMonitorValidationError(err error) error {
+	var validationErrors validator.ValidationErrors
+	if !errors.As(err, &validationErrors) {
+		return errors.New("Invalid JSON request body")
+	}
+
+	for _, fieldError := range validationErrors {
+		switch fieldError.Field() {
+		case "URL":
+			return errors.New("The url must be valid")
+		case "IntervalSeconds", "IntervalSecondsSnake":
 			return errors.New("The Interval should be at least 30 secondos long")
 		}
 	}
