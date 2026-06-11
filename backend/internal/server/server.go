@@ -38,8 +38,9 @@ func (s *Server) SetupRoutes() *gin.Engine {
 
 	api := router.Group("/api/v1")
 	{
-		monitors := api.Group("monitors")
+		monitors := api.Group("/monitors")
 		{
+			monitors.GET("", s.findAll)
 			monitors.POST("/create", s.create)
 		}
 	}

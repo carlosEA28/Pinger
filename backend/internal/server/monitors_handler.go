@@ -25,6 +25,16 @@ func (s *Server) create(c *gin.Context) {
 	utils.CreatedResponse(c, "Monitor created successfully", monitor)
 }
 
+func (s *Server) findAll(c *gin.Context) {
+	monitors, err := s.MonitorService.FindAll(c.Request.Context())
+	if err != nil {
+		utils.InternalServerErrorResponse(c, "failed to list monitors", err)
+		return
+	}
+
+	utils.SuccessResponse(c, "Monitors listed successfully", monitors)
+}
+
 func formatCreateMonitorValidationError(err error) error {
 	var validationErrors validator.ValidationErrors
 	if !errors.As(err, &validationErrors) {
