@@ -64,7 +64,16 @@ func (r *GormMonitorsRepository) Update(id uuid.UUID, fields dto.UpdateMonitorDt
 }
 
 func (r *GormMonitorsRepository) Delete(id uuid.UUID) error {
-	return r.db.Delete(&models.Monitor{}, "id = ?", id).Error
+	result := r.db.Delete(&models.Monitor{}, "id = ?", id)
+	if result.Error != nil {
+		return result.Error
+	}
+
+	if result.RowsAffected == 0 {
+		return gorm.ErrRecordNotFound
+	}
+
+	return nil
 }
 
 func (r *GormMonitorsRepository) FindAllActive(ctx context.Context) ([]models.Monitor, error) {
