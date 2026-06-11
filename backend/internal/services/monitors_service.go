@@ -89,6 +89,15 @@ func (s *MontiorsService) Update(id string, req *dto.UpdateMonitorDto) (*dto.Mon
 	return &response, nil
 }
 
+func (s *MontiorsService) Delete(id string) error {
+	monitorID, err := uuid.Parse(id)
+	if err != nil {
+		return errors.New("Invalid monitor id")
+	}
+
+	return s.monitorsRepository.Delete(monitorID)
+}
+
 func monitorResponseDto(monitor models.Monitor) dto.MonitorResponseDto {
 	return dto.MonitorResponseDto{
 		ID:              monitor.ID,

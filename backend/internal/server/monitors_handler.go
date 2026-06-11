@@ -57,6 +57,20 @@ func (s *Server) update(c *gin.Context) {
 	utils.SuccessResponse(c, "Monitor updated successfully", monitor)
 }
 
+func (s *Server) delete(c *gin.Context) {
+	if err := s.MonitorService.Delete(c.Param("id")); err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			utils.NotFoundResponse(c, "Monitor not found")
+			return
+		}
+
+		utils.BadRequestResponse(c, "failed to delete monitor", err)
+		return
+	}
+
+	utils.SuccessResponse(c, "Monitor deleted successfully", nil)
+}
+
 func formatCreateMonitorValidationError(err error) error {
 	var validationErrors validator.ValidationErrors
 	if !errors.As(err, &validationErrors) {
