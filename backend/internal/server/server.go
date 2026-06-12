@@ -41,7 +41,9 @@ func (s *Server) SetupRoutes() *gin.Engine {
 		monitors := api.Group("/monitors")
 		{
 			monitors.GET("", s.findAll)
+			monitors.GET("/:id/metrics", s.metrics)
 			monitors.POST("/create", s.create)
+			monitors.POST("/:id/ping", s.ping)
 			monitors.PATCH("/:id", s.update)
 			monitors.DELETE("/:id", s.delete)
 		}

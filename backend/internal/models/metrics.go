@@ -4,7 +4,6 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"gorm.io/gorm"
 )
 
 type LatencyMetric struct {
@@ -19,10 +18,6 @@ type LatencyMetric struct {
 	IsUp           bool `gorm:"not null"`
 }
 
-func (m *LatencyMetric) BeforeCreate(tx *gorm.DB) error {
-	if m.ID == uuid.Nil {
-		m.ID = uuid.New()
-	}
-
-	return nil
+func (LatencyMetric) TableName() string {
+	return "latency"
 }

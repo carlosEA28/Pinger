@@ -4,6 +4,7 @@ import (
 	"context"
 	"pinger/internal/dto"
 	"pinger/internal/models"
+	"time"
 
 	"github.com/google/uuid"
 	"gorm.io/gorm"
@@ -84,4 +85,11 @@ func (r *GormMonitorsRepository) FindAllActive(ctx context.Context) ([]models.Mo
 	}
 
 	return monitors, nil
+}
+
+func (r *GormMonitorsRepository) UpdateLastCheckedAt(ctx context.Context, id uuid.UUID, t time.Time) error {
+	return r.db.WithContext(ctx).
+		Model(&models.Monitor{}).
+		Where("id = ?", id).
+		Update("last_checked_at", t).Error
 }

@@ -12,6 +12,7 @@ type Monitor struct {
 	URL             string    `gorm:"not null"`
 	IntervalSeconds int       `gorm:"not null;default:60"`
 	IsActive        bool      `gorm:"not null;default:true"`
+	LastCheckedAt   *time.Time
 	CreatedAt       time.Time
 	UpdatedAt       time.Time
 }

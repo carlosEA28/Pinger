@@ -16,6 +16,7 @@ import (
 	"pinger/internal/repository"
 	"pinger/internal/server"
 	"pinger/internal/services"
+	"pinger/internal/workers"
 )
 
 func main() {
@@ -39,8 +40,17 @@ func main() {
 	defer mainDB.Close()
 
 	monitorRepository := repository.NewGormMonitorsRepository(db)
+	metricsRepository := repository.NewGormMetricsRepository(db)
 
-	monitorsService := services.NewMonitorsService(monitorRepository)
+	appCtx, appCancel := context.WithCancel(context.Background())
+	defer appCancel()
+
+	monitorsService := services.NewMonitorsService(monitorRepository, metricsRepository)
+	scheduler := workers.NewSchedulerWithConfig(monitorRepository, metricsRepository, workers.SchedulerConfig{
+		SchedulerInterval: cfg.Worker.SchedulerInterval,
+		HTTPTimeout:       cfg.Worker.HTTPTimeout,
+	})
+	go scheduler.Start(appCtx)
 
 	srv := server.New(cfg, db, &log, monitorsService)
 	router := srv.SetupRoutes()
@@ -66,6 +76,8 @@ func main() {
 	<-quit
 
 	log.Info().Msg("shutting down server")
+	appCancel()
+
 	ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
 	defer cancel()
 
