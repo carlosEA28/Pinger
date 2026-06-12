@@ -6,17 +6,25 @@ import (
 	"pinger/internal/dto"
 	"pinger/internal/interfaces"
 	"pinger/internal/models"
+	"pinger/internal/workers"
 
 	"github.com/google/uuid"
 )
 
 type MontiorsService struct {
 	monitorsRepository interfaces.IMonitorsRepository
+	metricsRepository  interfaces.IMetricsRepository
+	pinger             *workers.Pinger
 }
 
-func NewMonitorsService(monitorsRepository interfaces.IMonitorsRepository) *MontiorsService {
+func NewMonitorsService(
+	monitorsRepository interfaces.IMonitorsRepository,
+	metricsRepository interfaces.IMetricsRepository,
+) *MontiorsService {
 	return &MontiorsService{
 		monitorsRepository: monitorsRepository,
+		metricsRepository:  metricsRepository,
+		pinger:             workers.NewPinger(monitorsRepository, metricsRepository, nil),
 	}
 }
 
@@ -98,12 +106,35 @@ func (s *MontiorsService) Delete(id string) error {
 	return s.monitorsRepository.Delete(monitorID)
 }
 
+func (s *MontiorsService) Ping(ctx context.Context, id string) (*dto.MonitorResponseDto, error) {
+	monitorID, err := uuid.Parse(id)
+	if err != nil {
+		return nil, errors.New("Invalid monitor id")
+	}
+
+	monitor, err := s.monitorsRepository.FindById(monitorID)
+	if err != nil {
+		return nil, err
+	}
+
+	s.pinger.Ping(ctx, monitor)
+
+	monitor, err = s.monitorsRepository.FindById(monitorID)
+	if err != nil {
+		return nil, err
+	}
+
+	response := monitorResponseDto(monitor)
+	return &response, nil
+}
+
 func monitorResponseDto(monitor models.Monitor) dto.MonitorResponseDto {
 	return dto.MonitorResponseDto{
 		ID:              monitor.ID,
 		URL:             monitor.URL,
 		IntervalSeconds: monitor.IntervalSeconds,
 		IsActive:        monitor.IsActive,
+		LastCheckedAt:   monitor.LastCheckedAt,
 		CreatedAt:       monitor.CreatedAt,
 		UpdatedAt:       monitor.UpdatedAt,
 	}

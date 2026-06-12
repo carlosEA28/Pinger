@@ -71,6 +71,21 @@ func (s *Server) delete(c *gin.Context) {
 	utils.SuccessResponse(c, "Monitor deleted successfully", nil)
 }
 
+func (s *Server) ping(c *gin.Context) {
+	monitor, err := s.MonitorService.Ping(c.Request.Context(), c.Param("id"))
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			utils.NotFoundResponse(c, "Monitor not found")
+			return
+		}
+
+		utils.BadRequestResponse(c, "failed to ping monitor", err)
+		return
+	}
+
+	utils.SuccessResponse(c, "Monitor pinged successfully", monitor)
+}
+
 func formatCreateMonitorValidationError(err error) error {
 	var validationErrors validator.ValidationErrors
 	if !errors.As(err, &validationErrors) {

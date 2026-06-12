@@ -4,6 +4,7 @@ import (
 	"context"
 	"pinger/internal/dto"
 	"pinger/internal/models"
+	"time"
 
 	"github.com/google/uuid"
 )
@@ -15,4 +16,5 @@ type IMonitorsRepository interface {
 	Update(id uuid.UUID, fields dto.UpdateMonitorDto) error
 	Delete(id uuid.UUID) error
 	FindAllActive(ctx context.Context) ([]models.Monitor, error)
+	UpdateLastCheckedAt(ctx context.Context, id uuid.UUID, t time.Time) error
 }

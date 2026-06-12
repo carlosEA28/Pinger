@@ -17,3 +17,7 @@ type LatencyMetric struct {
 	TTFBMs         *float64
 	IsUp           bool `gorm:"not null"`
 }
+
+func (LatencyMetric) TableName() string {
+	return "latency"
+}

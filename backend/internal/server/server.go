@@ -42,6 +42,7 @@ func (s *Server) SetupRoutes() *gin.Engine {
 		{
 			monitors.GET("", s.findAll)
 			monitors.POST("/create", s.create)
+			monitors.POST("/:id/ping", s.ping)
 			monitors.PATCH("/:id", s.update)
 			monitors.DELETE("/:id", s.delete)
 		}

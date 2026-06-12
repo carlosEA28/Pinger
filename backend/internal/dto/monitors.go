@@ -37,10 +37,11 @@ func (d UpdateMonitorDto) RequestedIsActive() *bool {
 }
 
 type MonitorResponseDto struct {
-	ID              uuid.UUID `json:"id"`
-	URL             string    `json:"url"`
-	IntervalSeconds int       `json:"intervalSeconds"`
-	IsActive        bool      `json:"isActive"`
-	CreatedAt       time.Time `json:"createdAt"`
-	UpdatedAt       time.Time `json:"updatedAt"`
+	ID              uuid.UUID  `json:"id"`
+	URL             string     `json:"url"`
+	IntervalSeconds int        `json:"intervalSeconds"`
+	IsActive        bool       `json:"isActive"`
+	LastCheckedAt   *time.Time `json:"lastCheckedAt"`
+	CreatedAt       time.Time  `json:"createdAt"`
+	UpdatedAt       time.Time  `json:"updatedAt"`
 }
