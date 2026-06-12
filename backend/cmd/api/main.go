@@ -46,7 +46,10 @@ func main() {
 	defer appCancel()
 
 	monitorsService := services.NewMonitorsService(monitorRepository, metricsRepository)
-	scheduler := workers.NewScheduler(monitorRepository, metricsRepository)
+	scheduler := workers.NewSchedulerWithConfig(monitorRepository, metricsRepository, workers.SchedulerConfig{
+		SchedulerInterval: cfg.Worker.SchedulerInterval,
+		HTTPTimeout:       cfg.Worker.HTTPTimeout,
+	})
 	go scheduler.Start(appCtx)
 
 	srv := server.New(cfg, db, &log, monitorsService)

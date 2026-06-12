@@ -45,3 +45,15 @@ type MonitorResponseDto struct {
 	CreatedAt       time.Time  `json:"createdAt"`
 	UpdatedAt       time.Time  `json:"updatedAt"`
 }
+
+type LatencyMetricResponseDto struct {
+	ID             uuid.UUID `json:"id"`
+	MonitorID      uuid.UUID `json:"monitorId"`
+	Timestamp      time.Time `json:"timestamp"`
+	ResponseTimeMs float64   `json:"responseTimeMs"`
+	StatusCode     int       `json:"statusCode"`
+	DnsLookupMs    *float64  `json:"dnsLookupMs"`
+	TCPConnectMs   *float64  `json:"tcpConnectMs"`
+	TTFBMs         *float64  `json:"ttfbMs"`
+	IsUp           bool      `json:"isUp"`
+}

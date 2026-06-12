@@ -128,6 +128,29 @@ func (s *MontiorsService) Ping(ctx context.Context, id string) (*dto.MonitorResp
 	return &response, nil
 }
 
+func (s *MontiorsService) Metrics(ctx context.Context, id string) ([]dto.LatencyMetricResponseDto, error) {
+	monitorID, err := uuid.Parse(id)
+	if err != nil {
+		return nil, errors.New("Invalid monitor id")
+	}
+
+	if _, err := s.monitorsRepository.FindById(monitorID); err != nil {
+		return nil, err
+	}
+
+	metrics, err := s.metricsRepository.GetByMonitorId(ctx, monitorID)
+	if err != nil {
+		return nil, err
+	}
+
+	response := make([]dto.LatencyMetricResponseDto, 0, len(metrics))
+	for _, metric := range metrics {
+		response = append(response, latencyMetricResponseDto(metric))
+	}
+
+	return response, nil
+}
+
 func monitorResponseDto(monitor models.Monitor) dto.MonitorResponseDto {
 	return dto.MonitorResponseDto{
 		ID:              monitor.ID,
@@ -137,5 +160,19 @@ func monitorResponseDto(monitor models.Monitor) dto.MonitorResponseDto {
 		LastCheckedAt:   monitor.LastCheckedAt,
 		CreatedAt:       monitor.CreatedAt,
 		UpdatedAt:       monitor.UpdatedAt,
+	}
+}
+
+func latencyMetricResponseDto(metric models.LatencyMetric) dto.LatencyMetricResponseDto {
+	return dto.LatencyMetricResponseDto{
+		ID:             metric.ID,
+		MonitorID:      metric.MonitorID,
+		Timestamp:      metric.Timestamp,
+		ResponseTimeMs: metric.ResponseTimeMs,
+		StatusCode:     metric.StatusCode,
+		DnsLookupMs:    metric.DnsLookupMs,
+		TCPConnectMs:   metric.TCPConnectMs,
+		TTFBMs:         metric.TTFBMs,
+		IsUp:           metric.IsUp,
 	}
 }

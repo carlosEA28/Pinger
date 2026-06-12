@@ -36,6 +36,21 @@ func (s *Server) findAll(c *gin.Context) {
 	utils.SuccessResponse(c, "Monitors listed successfully", monitors)
 }
 
+func (s *Server) metrics(c *gin.Context) {
+	metrics, err := s.MonitorService.Metrics(c.Request.Context(), c.Param("id"))
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			utils.NotFoundResponse(c, "Monitor not found")
+			return
+		}
+
+		utils.BadRequestResponse(c, "failed to list monitor metrics", err)
+		return
+	}
+
+	utils.SuccessResponse(c, "Monitor metrics listed successfully", metrics)
+}
+
 func (s *Server) update(c *gin.Context) {
 	var req dto.UpdateMonitorDto
 	if err := c.ShouldBindJSON(&req); err != nil {
