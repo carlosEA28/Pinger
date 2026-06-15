@@ -9,38 +9,65 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as MonitorIdRouteImport } from './routes/$monitorId'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as DashboardAddRouteImport } from './routes/dashboard/add'
 
+const MonitorIdRoute = MonitorIdRouteImport.update({
+  id: '/$monitorId',
+  path: '/$monitorId',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const DashboardAddRoute = DashboardAddRouteImport.update({
+  id: '/dashboard/add',
+  path: '/dashboard/add',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/$monitorId': typeof MonitorIdRoute
+  '/dashboard/add': typeof DashboardAddRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/$monitorId': typeof MonitorIdRoute
+  '/dashboard/add': typeof DashboardAddRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/$monitorId': typeof MonitorIdRoute
+  '/dashboard/add': typeof DashboardAddRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths: '/' | '/$monitorId' | '/dashboard/add'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to: '/' | '/$monitorId' | '/dashboard/add'
+  id: '__root__' | '/' | '/$monitorId' | '/dashboard/add'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  MonitorIdRoute: typeof MonitorIdRoute
+  DashboardAddRoute: typeof DashboardAddRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/$monitorId': {
+      id: '/$monitorId'
+      path: '/$monitorId'
+      fullPath: '/$monitorId'
+      preLoaderRoute: typeof MonitorIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
@@ -48,12 +75,30 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/dashboard/add': {
+      id: '/dashboard/add'
+      path: '/dashboard/add'
+      fullPath: '/dashboard/add'
+      preLoaderRoute: typeof DashboardAddRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  MonitorIdRoute: MonitorIdRoute,
+  DashboardAddRoute: DashboardAddRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { createStart } from '@tanstack/react-start'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+  }
+}
