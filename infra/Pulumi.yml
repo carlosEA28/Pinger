@@ -1,0 +1,8 @@
+# Pulumi.yaml provider configuration file
+name: Deploy frontend Pinger
+runtime: go
+config:
+  netlify:token:
+    value: 'nfp_dCw35JYvgkYNBDF45kRRMUe1HFUoKPCj5869'
+  netlify:siteName:
+    value: pinger-frontend
