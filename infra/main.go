@@ -1,6 +1,9 @@
 package main
 
 import (
+	"fmt"
+	"os"
+
 	"github.com/pulumi/pulumi-command/sdk/go/command/local"
 	"github.com/pulumi/pulumi-terraform-provider/sdks/go/netlify/netlify"
 	"github.com/pulumi/pulumi/sdk/v3/go/pulumi"
@@ -10,14 +13,17 @@ import (
 func main() {
 	pulumi.Run(func(ctx *pulumi.Context) error {
 		cfg := config.New(ctx, "netlify")
-		token := cfg.RequireSecret("token")
+		token := os.Getenv("NETLIFY_TOKEN")
+		if token == "" {
+			return fmt.Errorf("missing NETLIFY_TOKEN environment variable")
+		}
 		siteName := cfg.Get("siteName")
 		if siteName == "" {
 			siteName = "pinger-frontend"
 		}
 
 		netlifyProvider, err := netlify.NewProvider(ctx, "netlify", &netlify.ProviderArgs{
-			Token: token,
+			Token: pulumi.StringPtr(token),
 		})
 		if err != nil {
 			return err
@@ -29,7 +35,7 @@ func main() {
 			Update: pulumi.String(deployCommand),
 			Dir:    pulumi.String("../frontend"),
 			Environment: pulumi.StringMap{
-				"NETLIFY_AUTH_TOKEN": token,
+				"NETLIFY_AUTH_TOKEN": pulumi.String(token),
 				"NETLIFY_SITE_NAME":  pulumi.String(siteName),
 			},
 			Triggers: pulumi.Array{
